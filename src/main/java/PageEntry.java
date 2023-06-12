@@ -36,8 +36,8 @@ public class PageEntry implements Comparable<PageEntry> {
 
     @Override
     public int compareTo(PageEntry o) {
-        if (this.getCount() > o.getCount()) return 1;
-        if (this.getCount() < o.getCount()) return -1;
+        if (this.getCount() > o.getCount()) return -1;
+        if (this.getCount() < o.getCount()) return 1;
         else return 0;
     }
 
