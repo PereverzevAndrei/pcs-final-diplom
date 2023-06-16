@@ -27,7 +27,7 @@ public class Main {
                     searchQuery = reader.readLine();
                     searchResult = engine.search(searchQuery);
                     Collections.sort(searchResult);
-                    if (searchResult.size() == 0) {
+                    if (searchResult.isEmpty()) {
                         writer.println("Запрашиваемое слово не найдено");
                     }
                     GsonBuilder builder = new GsonBuilder();

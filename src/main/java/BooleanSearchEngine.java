@@ -5,7 +5,6 @@ import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,9 +12,7 @@ import java.util.*;
 
 public class BooleanSearchEngine implements SearchEngine {
 
-    String word;
-    Map<PageEntry, String> searchReadyUnsorted = new HashMap<>();
-    String pdfsDir;
+    protected Map<PageEntry, String> searchReadyUnsorted = new HashMap<>();
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
         String fileName;
@@ -63,20 +60,21 @@ public class BooleanSearchEngine implements SearchEngine {
 
     @Override
     public List<PageEntry> search(String word) {
-        word = word.toLowerCase();
+        String keyword;
+        keyword = word.toLowerCase();
         List<PageEntry> searchResult = new ArrayList<>();
 
-        Iterator entries = searchReadyUnsorted.entrySet().iterator();
+        Iterator<Map.Entry<PageEntry, String>> entries = searchReadyUnsorted.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry entry = (Map.Entry) entries.next();
-            PageEntry key = (PageEntry) entry.getKey();
-            String value = (String) entry.getValue();
+            Map.Entry<PageEntry, String> entry = (Map.Entry) entries.next();
+            PageEntry key =  entry.getKey();
+            String value =  entry.getValue();
             if (value.equals(word)) {
                 searchResult.add(key);
             }
         }
         System.out.println(searchResult.size());
-        if (searchResult.size() == 0) {
+        if (searchResult.isEmpty()) {
             System.out.println("Запрашиваемое слово не найдено");
         }
         return searchResult;
