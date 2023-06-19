@@ -26,14 +26,12 @@ public class Main {
                     out.println("New connection accepted");
                     searchQuery = reader.readLine();
                     searchResult = engine.search(searchQuery);
-                    Collections.sort(searchResult);
                     if (searchResult.isEmpty()) {
                         writer.println("Запрашиваемое слово не найдено");
                     }
                     GsonBuilder builder = new GsonBuilder();
                     Gson gson = builder.setPrettyPrinting().create();
                     writer.println(gson.toJson(searchResult));
-                    out.println(gson.toJson(searchResult));
                 }
             }
         } catch (IOException e) {

@@ -9,10 +9,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BooleanSearchEngine implements SearchEngine {
 
     protected Map<PageEntry, String> searchReadyUnsorted = new HashMap<>();
+    protected Map<PageEntry, String> searchReadySorted = new HashMap<>();
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
         String fileName;
@@ -56,6 +58,16 @@ public class BooleanSearchEngine implements SearchEngine {
                 }
             }
         }
+        searchReadySorted = searchReadyUnsorted.entrySet().stream()
+                .sorted(Comparator.comparing(e -> -e.getKey().getCount()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> {
+                            throw new AssertionError();
+                        },
+                        LinkedHashMap::new
+                ));
     }
 
     @Override
@@ -64,22 +76,16 @@ public class BooleanSearchEngine implements SearchEngine {
         keyword = word.toLowerCase();
         List<PageEntry> searchResult = new ArrayList<>();
 
-        Iterator<Map.Entry<PageEntry, String>> entries = searchReadyUnsorted.entrySet().iterator();
+        Iterator<Map.Entry<PageEntry, String>> entries = searchReadySorted.entrySet().iterator();
         while (entries.hasNext()) {
             Map.Entry<PageEntry, String> entry = (Map.Entry) entries.next();
-            PageEntry key =  entry.getKey();
-            String value =  entry.getValue();
+            PageEntry key = entry.getKey();
+            String value = entry.getValue();
             if (value.equals(word)) {
                 searchResult.add(key);
             }
         }
-        System.out.println(searchResult.size());
-        if (searchResult.isEmpty()) {
-            System.out.println("Запрашиваемое слово не найдено");
-        }
         return searchResult;
     }
-
-
 }
 
