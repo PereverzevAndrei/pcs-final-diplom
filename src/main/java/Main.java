@@ -32,6 +32,7 @@ public class Main {
                     GsonBuilder builder = new GsonBuilder();
                     Gson gson = builder.setPrettyPrinting().create();
                     writer.println(gson.toJson(searchResult));
+                    out.println(gson.toJson(searchResult));
                 }
             }
         } catch (IOException e) {

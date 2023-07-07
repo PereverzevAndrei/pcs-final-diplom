@@ -9,11 +9,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BooleanSearchEngine implements SearchEngine {
+    protected List<PageEntry> searchBox = new ArrayList<PageEntry>();
 
-    protected Map<PageEntry, String> searchReadyUnsorted = new HashMap<>();
+    protected Map<String, List<PageEntry>> searchReadyUnsorted = new HashMap<>();
+
     protected Map<PageEntry, String> searchReadySorted = new HashMap<>();
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
@@ -28,6 +29,7 @@ public class BooleanSearchEngine implements SearchEngine {
                 var doc = new PdfDocument(new PdfReader(fileName));
                 int pages = doc.getNumberOfPages();
                 Map<String, Integer> freqs = new HashMap<>();
+                List<PageEntry> searchBox = new ArrayList<PageEntry>();
                 Map<Integer, String> softSkills = new HashMap<>();
                 for (int i = 1; i < pages; i++) {
                     int actPage = i;
@@ -52,22 +54,29 @@ public class BooleanSearchEngine implements SearchEngine {
                     }
                     String finalFileName = fileName;
                     freqs.forEach((k, v) -> {
-                        searchReadyUnsorted.put(new PageEntry(finalFileName, key, v), k);
+                       if (searchReadyUnsorted.containsKey(k)) {
+                           addNew(searchReadyUnsorted, k, v, key, finalFileName);
+                       }
+                       else
+                          putNew(searchReadyUnsorted, k, v, key, finalFileName);
                     });
                     freqs.clear();
                 }
             }
         }
-        searchReadySorted = searchReadyUnsorted.entrySet().stream()
-                .sorted(Comparator.comparing(e -> -e.getKey().getCount()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> {
-                            throw new AssertionError();
-                        },
-                        LinkedHashMap::new
-                ));
+//        searchReadySorted = searchReadyUnsorted.entrySet().stream()
+//                .sorted(Comparator.comparing(e -> -e.getKey().getCount()))
+//                .collect(Collectors.toMap(
+//                        Map.Entry::getKey,
+//                        Map.Entry::getValue,
+//                        (a, b) -> {
+//                            throw new AssertionError();
+//                        },
+//                        LinkedHashMap::new
+//                ));
+
+        System.out.println(searchReadyUnsorted.size());
+ //       System.out.println(searchReadyUnsorted.values());
     }
 
     @Override
@@ -76,16 +85,28 @@ public class BooleanSearchEngine implements SearchEngine {
         keyword = word.toLowerCase();
         List<PageEntry> searchResult = new ArrayList<>();
 
-        Iterator<Map.Entry<PageEntry, String>> entries = searchReadySorted.entrySet().iterator();
+        Iterator<Map.Entry<String, List<PageEntry>>> entries = searchReadyUnsorted.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry<PageEntry, String> entry = (Map.Entry) entries.next();
-            PageEntry key = entry.getKey();
-            String value = entry.getValue();
-            if (value.equals(word)) {
-                searchResult.add(key);
+            Map.Entry<String, List<PageEntry>> entry = (Map.Entry) entries.next();
+            String key = entry.getKey();
+            List<PageEntry> value = entry.getValue();
+            if (key.equals(word)) {
+                searchResult = value;
             }
+            System.out.println(searchResult);
         }
-        return searchResult;
+              return searchResult;
+    }
+    public void addNew (Map<String, List<PageEntry>> searchReadyUnsorted, String k, int v, int key, String finalFileName){
+        List<PageEntry> tempSearchBox = searchReadyUnsorted.get(k);
+        tempSearchBox.add(new PageEntry(finalFileName,key,v));
+        searchBox=tempSearchBox;
+        searchReadyUnsorted.put(k, searchBox);
+        tempSearchBox.clear();
+    }
+    public void putNew(Map<String, List<PageEntry>> searchReadyUnsorted, String k, int v, int key, String finalFileName){
+        searchBox.add(new PageEntry(finalFileName, key, v));
+        searchReadyUnsorted.put(k, searchBox);
+    //    searchReadyUnsorted.
     }
 }
-
