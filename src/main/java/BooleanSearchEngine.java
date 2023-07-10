@@ -9,12 +9,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BooleanSearchEngine implements SearchEngine {
-
-    protected Map<PageEntry, String> searchReadyUnsorted = new HashMap<>();
-    protected Map<PageEntry, String> searchReadySorted = new HashMap<>();
+    protected Map<String, List<PageEntry>> searchReadyUnsorted = new HashMap<>();
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
         String fileName;
@@ -28,6 +25,7 @@ public class BooleanSearchEngine implements SearchEngine {
                 var doc = new PdfDocument(new PdfReader(fileName));
                 int pages = doc.getNumberOfPages();
                 Map<String, Integer> freqs = new HashMap<>();
+                List<PageEntry> searchBox = new ArrayList<PageEntry>();
                 Map<Integer, String> softSkills = new HashMap<>();
                 for (int i = 1; i < pages; i++) {
                     int actPage = i;
@@ -51,23 +49,21 @@ public class BooleanSearchEngine implements SearchEngine {
                         freqs.put(word, freqs.getOrDefault(word, 0) + 1);
                     }
                     String finalFileName = fileName;
+//third Step - creating result map
                     freqs.forEach((k, v) -> {
-                        searchReadyUnsorted.put(new PageEntry(finalFileName, key, v), k);
+                        if (searchReadyUnsorted.containsKey(k)) {
+                            List<PageEntry> entries = searchReadyUnsorted.get(k);
+                            entries.add(new PageEntry(finalFileName, key, v));
+                            entries.sort(PageEntry::compareTo);
+                        } else
+                            searchReadyUnsorted.put(k, new ArrayList<PageEntry>());
+                        List<PageEntry> entries = searchReadyUnsorted.get(k);
+                        entries.add(new PageEntry(finalFileName, key, v));
                     });
                     freqs.clear();
                 }
             }
         }
-        searchReadySorted = searchReadyUnsorted.entrySet().stream()
-                .sorted(Comparator.comparing(e -> -e.getKey().getCount()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> {
-                            throw new AssertionError();
-                        },
-                        LinkedHashMap::new
-                ));
     }
 
     @Override
@@ -76,13 +72,13 @@ public class BooleanSearchEngine implements SearchEngine {
         keyword = word.toLowerCase();
         List<PageEntry> searchResult = new ArrayList<>();
 
-        Iterator<Map.Entry<PageEntry, String>> entries = searchReadySorted.entrySet().iterator();
+        Iterator<Map.Entry<String, List<PageEntry>>> entries = searchReadyUnsorted.entrySet().iterator();
         while (entries.hasNext()) {
-            Map.Entry<PageEntry, String> entry = (Map.Entry) entries.next();
-            PageEntry key = entry.getKey();
-            String value = entry.getValue();
-            if (value.equals(word)) {
-                searchResult.add(key);
+            Map.Entry<String, List<PageEntry>> entry = (Map.Entry) entries.next();
+            String key = entry.getKey();
+            List<PageEntry> value = entry.getValue();
+            if (key.equals(word)) {
+                searchResult = value;
             }
         }
         return searchResult;

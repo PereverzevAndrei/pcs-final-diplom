@@ -27,11 +27,11 @@ public class PageEntry implements Comparable<PageEntry> {
     public String toString() {
         return
                 "Файл - " +
-                pdfName +
+                        pdfName +
                         ", Страница =" + page +
                         ", встречается раз =" + count
 
-        ;
+                ;
     }
 
     @Override
