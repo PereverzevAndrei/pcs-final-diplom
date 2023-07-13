@@ -15,13 +15,13 @@ public class BooleanSearchEngine implements SearchEngine {
 
     public BooleanSearchEngine(File pdfsDir) throws IOException {
         String fileName;
-        Path directory = Path.of("pdfs/");
+        Path directory = Path.of(String.valueOf(pdfsDir));
         try (DirectoryStream<Path> files = Files.newDirectoryStream(directory)) {
 
             for (Path path : files) {
                 System.out.println(path);
                 fileName = String.valueOf(path);
-                // first step - reading
+// first step - reading
                 var doc = new PdfDocument(new PdfReader(fileName));
                 int pages = doc.getNumberOfPages();
                 Map<String, Integer> freqs = new HashMap<>();
@@ -41,7 +41,7 @@ public class BooleanSearchEngine implements SearchEngine {
                     String value = entry.getValue();
 
                     var words = value.split("\\P{IsAlphabetic}+");
-                    for (var word : words) { // перебираем слова
+                    for (var word : words) {
                         if (word.isEmpty()) {
                             continue;
                         }
@@ -54,33 +54,25 @@ public class BooleanSearchEngine implements SearchEngine {
                         if (searchReadyUnsorted.containsKey(k)) {
                             List<PageEntry> entries = searchReadyUnsorted.get(k);
                             entries.add(new PageEntry(finalFileName, key, v));
-                            entries.sort(PageEntry::compareTo);
-                        } else
+                         } else
                             searchReadyUnsorted.put(k, new ArrayList<PageEntry>());
                         List<PageEntry> entries = searchReadyUnsorted.get(k);
                         entries.add(new PageEntry(finalFileName, key, v));
                     });
                     freqs.clear();
                 }
+               searchReadyUnsorted.forEach((k, v) -> {
+                    List<PageEntry> entries = searchReadyUnsorted.get(k);
+                    entries.sort(PageEntry::compareTo);
+                });
             }
         }
     }
 
     @Override
     public List<PageEntry> search(String word) {
-        String keyword;
-        keyword = word.toLowerCase();
-        List<PageEntry> searchResult = new ArrayList<>();
-
-        Iterator<Map.Entry<String, List<PageEntry>>> entries = searchReadyUnsorted.entrySet().iterator();
-        while (entries.hasNext()) {
-            Map.Entry<String, List<PageEntry>> entry = (Map.Entry) entries.next();
-            String key = entry.getKey();
-            List<PageEntry> value = entry.getValue();
-            if (key.equals(word)) {
-                searchResult = value;
-            }
-        }
+        String keyword = word.toLowerCase();
+        List<PageEntry> searchResult = searchReadyUnsorted.get(keyword);
         return searchResult;
     }
 }
